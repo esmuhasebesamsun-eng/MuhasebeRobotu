@@ -64,7 +64,7 @@ export interface TaxDocumentData {
 }
 
 // ============================================================================================
-// 2. SABİTLER VE ROBOT ŞABLONLARI
+// 2. SABİTLER VE ROBOT ŞABLONLARI (CONSTANTS & TEMPLATES)
 // ============================================================================================
 
 const EXCEL_HEADERS = [
@@ -164,6 +164,7 @@ import ctypes
 from urllib.parse import quote
 from email.message import EmailMessage
 
+# --- IMPORT KONTROLU ---
 try:
     import tkinter as tk
     from tkinter import ttk, scrolledtext, messagebox
@@ -171,12 +172,14 @@ except ImportError as e:
     with open("HATA_LOG.txt", "w") as f: f.write(f"GUI Hatasi: {e}")
     sys.exit(1)
 
+# --- WINDOWS KONSO GIZLEME ---
 def hide_console():
     try:
         kernel32 = ctypes.WinDLL('kernel32')
         user32 = ctypes.WinDLL('user32')
         hWnd = kernel32.GetConsoleWindow()
-        if hWnd: user32.ShowWindow(hWnd, 0)
+        if hWnd:
+            user32.ShowWindow(hWnd, 0) # 0 = SW_HIDE
     except: pass
 
 def show_console():
@@ -184,15 +187,20 @@ def show_console():
         kernel32 = ctypes.WinDLL('kernel32')
         user32 = ctypes.WinDLL('user32')
         hWnd = kernel32.GetConsoleWindow()
-        if hWnd: user32.ShowWindow(hWnd, 5)
+        if hWnd:
+            user32.ShowWindow(hWnd, 5) # 5 = SW_SHOW
     except: pass
 
+# Baslangicta gizle
 hide_console()
 
+# --- WINDOWS CHARSET ---
 if sys.platform.startswith('win'):
-    try: os.system('chcp 65001')
+    try:
+        os.system('chcp 65001')
     except: pass
 
+# --- PYAUTOGUI ---
 WHATSAPP_AVAILABLE = False
 try:
     import pyautogui
@@ -200,15 +208,21 @@ try:
     WHATSAPP_AVAILABLE = True 
 except: pass
 
-try: BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-except NameError: BASE_DIR = os.getcwd()
+# --- YOL TANIMLARI ---
+try:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    BASE_DIR = os.getcwd()
 
-if not BASE_DIR or BASE_DIR == '.': BASE_DIR = os.getcwd()
+if not BASE_DIR or BASE_DIR == '.':
+    BASE_DIR = os.getcwd()
 
 WATCH_FOLDER = BASE_DIR
 SENT_FOLDER = os.path.join(BASE_DIR, "Gonderilenler")
 CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 MANIFEST_FILE = os.path.join(BASE_DIR, "manifest.json")
+
+# --- CORE FONKSIYONLAR ---
 
 def load_config():
     default_config = {"email": "", "appPassword": "", "whatsappEnabled": True, "emailEnabled": True}
@@ -312,15 +326,20 @@ def send_email(to_email, subject, body, filepath=None):
         return True, "Gonderildi"
     except Exception as e: return False, str(e)
 
+# --- MODERN GUI ---
+
 class ModernButton(tk.Frame):
     def __init__(self, parent, text, icon, color, command, width=200):
         super().__init__(parent, bg=color, cursor="hand2", height=50, width=width)
         self.pack_propagate(False)
         self.command = command
+        
         self.lbl_icon = tk.Label(self, text=icon, bg=color, fg="white", font=("Segoe UI Emoji", 16))
         self.lbl_icon.pack(side="left", padx=(15, 5))
+        
         self.lbl_text = tk.Label(self, text=text, bg=color, fg="white", font=("Segoe UI", 10, "bold"))
         self.lbl_text.pack(side="left")
+        
         self.bind("<Button-1>", self.on_click)
         self.lbl_icon.bind("<Button-1>", self.on_click)
         self.lbl_text.bind("<Button-1>", self.on_click)
@@ -334,24 +353,38 @@ class SettingsDialog:
         self.top.title("Ayarlar")
         self.top.geometry("500x500")
         self.top.configure(bg="#f1f5f9")
+        
         current = load_config()
+        
         tk.Label(self.top, text="İletişim Ayarları", font=("Segoe UI", 14, "bold"), bg="#f1f5f9", fg="#334155").pack(pady=15)
+        
+        # Form Container
         f = tk.Frame(self.top, bg="white", padx=20, pady=20)
         f.pack(fill="x", padx=20)
+        
         tk.Label(f, text="Gmail Adresi:", bg="white", font=("Segoe UI", 9)).pack(anchor="w")
         self.entry_email = tk.Entry(f, width=40, font=("Consolas", 10))
         self.entry_email.insert(0, current.get("email", ""))
         self.entry_email.pack(fill="x", pady=(2, 10))
+        
         tk.Label(f, text="Uygulama Şifresi:", bg="white", font=("Segoe UI", 9)).pack(anchor="w")
         self.entry_pass = tk.Entry(f, width=40, show="*", font=("Consolas", 10))
         self.entry_pass.insert(0, current.get("appPassword", ""))
         self.entry_pass.pack(fill="x", pady=(2, 10))
+        
         self.var_wa = tk.BooleanVar(value=current.get("whatsappEnabled", True))
         self.var_mail = tk.BooleanVar(value=current.get("emailEnabled", True))
+        
         tk.Checkbutton(f, text="WhatsApp ile Gönder", variable=self.var_wa, bg="white").pack(anchor="w")
         tk.Checkbutton(f, text="E-Posta ile Gönder", variable=self.var_mail, bg="white").pack(anchor="w")
+        
+        # Test Btn
         tk.Button(f, text="TEST MAİLİ GÖNDER", bg="#f59e0b", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", pady=5, command=self.test_mail).pack(fill="x", pady=10)
+        
+        # Save Btn
         tk.Button(self.top, text="KAYDET", bg="#22c55e", fg="white", font=("Segoe UI", 10, "bold"), relief="flat", pady=8, command=self.save).pack(fill="x", padx=20, pady=10)
+        
+        # Console Toggle
         tk.Button(self.top, text="Siyah Konsolu Göster/Gizle", bg="#cbd5e1", fg="#334155", font=("Segoe UI", 8), relief="flat", command=self.toggle_console).pack(pady=5)
 
     def toggle_console(self):
@@ -359,15 +392,26 @@ class SettingsDialog:
         messagebox.showinfo("Bilgi", "Konsol açıldı. Gizlemek için programı kapatıp açın.")
 
     def test_mail(self):
-        temp = {"email": self.entry_email.get().strip(), "appPassword": self.entry_pass.get().strip(), "whatsappEnabled": self.var_wa.get(), "emailEnabled": self.var_mail.get()}
+        temp = {
+            "email": self.entry_email.get().strip(),
+            "appPassword": self.entry_pass.get().strip(),
+            "whatsappEnabled": self.var_wa.get(),
+            "emailEnabled": self.var_mail.get()
+        }
         save_config(temp)
         if not temp["email"]: return messagebox.showerror("Hata", "Mail giriniz.")
+        
         suc, msg = send_email(temp["email"], "Robot Test", "Robot calisiyor.")
         if suc: messagebox.showinfo("Başarılı", "Test maili gönderildi!")
         else: messagebox.showerror("Hata", msg)
 
     def save(self):
-        new_conf = {"email": self.entry_email.get().strip(), "appPassword": self.entry_pass.get().strip(), "whatsappEnabled": self.var_wa.get(), "emailEnabled": self.var_mail.get()}
+        new_conf = {
+            "email": self.entry_email.get().strip(),
+            "appPassword": self.entry_pass.get().strip(),
+            "whatsappEnabled": self.var_wa.get(),
+            "emailEnabled": self.var_mail.get()
+        }
         save_config(new_conf)
         global CONFIG
         CONFIG = new_conf
@@ -379,33 +423,57 @@ class MainApp:
         self.root.title("Muhasebe Robotu v16")
         self.root.geometry("800x600")
         self.root.configure(bg="#f8fafc")
+        
+        # --- HEADER ---
         header = tk.Frame(self.root, bg="#1e293b", height=80)
         header.pack(fill="x")
+        
         tk.Label(header, text="MUHASEBE OTOMASYON", font=("Segoe UI", 16, "bold"), bg="#1e293b", fg="white").place(x=20, y=25)
+        
         tk.Button(header, text="⚙️ AYARLAR", bg="#334155", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", command=lambda: SettingsDialog(self.root)).place(x=680, y=25)
+        
+        # --- MAIN CONTENT ---
         main_frame = tk.Frame(self.root, bg="#f8fafc")
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # STATUS
         self.status_var = tk.StringVar(value="HAZIR - Bekleniyor...")
         self.status_lbl = tk.Label(main_frame, textvariable=self.status_var, font=("Segoe UI", 11), bg="#e2e8f0", fg="#475569", padx=10, pady=5, width=60)
         self.status_lbl.pack(pady=(0, 20))
+        
+        # BUTTONS GRID
         btn_grid = tk.Frame(main_frame, bg="#f8fafc")
         btn_grid.pack()
+        
         self.btn_all = ModernButton(btn_grid, "OTOMATİK (HEPSİ)", "🚀", "#3b82f6", lambda: self.start_thread("all"), width=220)
         self.btn_all.grid(row=0, column=0, padx=10)
+        
         self.btn_receipt = ModernButton(btn_grid, "SADECE TAHAKKUK", "📄", "#64748b", lambda: self.start_thread("receipts_only"), width=220)
         self.btn_receipt.grid(row=0, column=1, padx=10)
+        
         self.btn_summary = ModernButton(btn_grid, "SADECE ÖDEME", "💰", "#64748b", lambda: self.start_thread("summary_only"), width=220)
         self.btn_summary.grid(row=0, column=2, padx=10)
+        
+        # STOP BUTTON
         tk.Button(main_frame, text="DURDUR", bg="#ef4444", fg="white", font=("Segoe UI", 8, "bold"), relief="flat", width=20, command=self.stop_thread).pack(pady=10)
+
+        # LOG BOX
         log_frame = tk.Frame(main_frame, bg="white", bd=1, relief="solid")
         log_frame.pack(fill="both", expand=True, pady=10)
+        
         tk.Label(log_frame, text="İşlem Günlüğü", bg="#f1f5f9", font=("Segoe UI", 8, "bold"), anchor="w", padx=5).pack(fill="x")
+        
         self.log_box = scrolledtext.ScrolledText(log_frame, height=10, font=("Consolas", 9), state='disabled', bg="white", fg="#333")
         self.log_box.pack(fill="both", expand=True, padx=5, pady=5)
+        
+        # --- THREAD CONTROL ---
         self.current_thread = None
         self.stop_flag = False
+        
+        # Stdout Redirect
         sys.stdout = self
         sys.stderr = self
+        
         if not os.path.exists(SENT_FOLDER): os.makedirs(SENT_FOLDER)
         self.root.mainloop()
 
@@ -424,8 +492,10 @@ class MainApp:
             self.status_lbl.config(bg="#fee2e2", fg="#991b1b")
 
     def start_thread(self, mode):
+        # Once eskiyi durdur
         if self.current_thread and self.current_thread.is_alive():
             self.stop_flag = True
+            # Kısa bekleme
             self.root.after(1000, lambda: self._real_start(mode))
         else:
             self._real_start(mode)
@@ -434,6 +504,7 @@ class MainApp:
         self.stop_flag = False
         self.status_var.set(f"ÇALIŞIYOR: {mode.upper()}")
         self.status_lbl.config(bg="#dcfce7", fg="#166534")
+        
         print(f"\\n>>> YENİ MOD BAŞLATILIYOR: {mode.upper()}")
         self.current_thread = threading.Thread(target=self.worker, args=(mode,), daemon=True)
         self.current_thread.start()
@@ -441,8 +512,10 @@ class MainApp:
     def worker(self, mode):
         clients = load_clients()
         print("Müşteri listesi yüklendi.")
+        
         while not self.stop_flag:
             try:
+                # 1. ZIP Check
                 for f in os.listdir(WATCH_FOLDER):
                     if self.stop_flag: break
                     if f.lower().endswith('.zip'):
@@ -453,15 +526,22 @@ class MainApp:
                             os.remove(f)
                             clients = load_clients()
                         except Exception as e: print(f"ZIP Hatasi: {e}")
+
+                # 2. File Check
                 files = sorted([f for f in os.listdir(WATCH_FOLDER) if f.lower().endswith(('.pdf','.jpg','.png'))])
+                
                 processed_any = False
                 for f in files:
                     if self.stop_flag: break
                     if f.startswith('.') or "Gonderilenler" in f: continue
+                    
                     is_notif = "odeme" in f.lower() or "bildirim" in f.lower() or "ozet" in f.lower()
+                    
                     if mode == "receipts_only" and is_notif: continue
                     if mode == "summary_only" and not is_notif: continue
+                    
                     print(f">> İşleniyor: {f}")
+                    
                     clean_name = normalize_text(f)
                     matched = None
                     best_len = 0
@@ -469,32 +549,42 @@ class MainApp:
                         if k in clean_name and len(k) > best_len:
                             matched = v
                             best_len = len(k)
+                    
                     if matched:
                         print(f"   Firma: {matched['name']}")
                         f_path = os.path.join(WATCH_FOLDER, f)
+                        
                         wa = False
                         mail = False
+                        
                         if CONFIG.get("whatsappEnabled") and matched.get("phone"):
                             wa = send_whatsapp(matched["phone"], f_path, f"Sayın Yetkili, {matched['name']} belgeniz ektedir.")
+                            
                         if CONFIG.get("emailEnabled") and matched.get("email"):
                             suc, msg = send_email(matched["email"], f"Muhasebe Belgesi - {matched['name']}", "Belgeniz ektedir.", f_path)
                             if suc: mail = True
                             else: print(f"   Mail Hata: {msg}")
+                        
                         no_contact = (not matched.get("phone") and not matched.get("email"))
+                        
                         if wa or mail or no_contact:
                             try:
                                 shutil.move(f_path, os.path.join(SENT_FOLDER, f))
                                 print("   [OK] Arşivlendi.")
                             except: pass
                         processed_any = True
-                    else: pass
+                    else:
+                        pass # Taninmayan dosya
+                
                 if not processed_any:
-                    for _ in range(4):
+                    for _ in range(4): # 2 sn bekle ama parca parca ki stop calissin
                         if self.stop_flag: break
                         time.sleep(0.5)
+                        
             except Exception as e:
                 print(f"Dongu Hatasi: {e}")
                 time.sleep(1)
+
         print("--- THREAD SONLANDI ---")
 
 if __name__ == "__main__":
@@ -600,6 +690,15 @@ const getPaymentPdfBytes = async (taxItems: TaxDocumentData[], companyName: stri
 const generatePaymentPdf = async (taxItems: TaxDocumentData[], companyName: string) => {
     const doc = await createEsMusavirlikPdf(taxItems, companyName);
     if (doc) doc.save(`Odeme_Bildirimi_${transliterate(companyName)}.pdf`);
+};
+
+const generateSummaryPdf = async (taxItems: TaxDocumentData[], companies: Company[]) => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    await loadTurkishFonts(doc);
+    
+    // Basit özet tablosu oluşturma mantığı...
+    doc.text("GENEL ÖZET", 14, 20);
+    doc.save(`Genel_Ozet.pdf`);
 };
 
 const findVat = (details: VatDetail[], rate: number, type: 'tax' | 'gross'): number => {
@@ -915,7 +1014,7 @@ const CompanyManagerModal: React.FC<CompanyManagerModalProps> = ({ isOpen, onClo
   );
 };
 
-// --- ROBOT KURULUM MODALI (YENİ EKLENDİ - EN ÜSTTE İNDİRME BUTONU) ---
+// --- ROBOT KURULUM MODALI (YENİ EKLENDİ) ---
 interface RobotConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -934,29 +1033,13 @@ const RobotConfigModal: React.FC<RobotConfigModalProps> = ({ isOpen, onClose, on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto" aria-modal="true">
+    <div className="fixed inset-0 z-[60] overflow-y-auto" aria-modal="true">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-90 transition-opacity" onClick={onClose}></div>
-        <div className="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border-4 border-slate-800">
-          <div className="bg-slate-800 px-6 py-4 flex justify-between items-center"><h3 className="text-lg font-bold text-white">🤖 Robot Kurulum & İndirme</h3><button onClick={onClose} className="text-white text-2xl hover:text-gray-300">&times;</button></div>
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-80 transition-opacity" onClick={onClose}></div>
+        <div className="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-slate-800 px-6 py-4 flex justify-between items-center"><h3 className="text-lg font-bold text-white">🤖 Robot Kurulum Merkezi</h3><button onClick={onClose} className="text-white text-2xl hover:text-gray-300">&times;</button></div>
           <div className="px-6 py-6 space-y-6">
-            
-            {/* EN ÜSTTE BÜYÜK İNDİRME BUTONU - GÖZDEN KAÇIRILAMAZ */}
-            <div className="bg-green-50 p-4 rounded-xl border-2 border-green-500 text-center">
-                <p className="text-green-800 font-bold mb-2">Ayarları yapmadan da indirebilirsiniz:</p>
-                <button onClick={() => onDownload(settings)} className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-4 rounded-xl font-bold shadow-xl transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3">
-                    <span className="text-2xl">📥</span> HEMEN İNDİR (.ZIP)
-                </button>
-            </div>
-
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center">
-                    <span className="bg-white px-2 text-sm text-gray-500">veya ayarları özelleştirin</span>
-                </div>
-            </div>
+            <p className="text-sm text-slate-600 bg-blue-50 p-3 rounded border border-blue-100">Bu ayarlar, indirilecek olan Python Robotu'nun içine gömülecektir. Robotu indirdikten sonra tekrar ayar yapmanıza gerek kalmaz.</p>
             
             <div className="space-y-3">
                 <label className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -985,7 +1068,10 @@ const RobotConfigModal: React.FC<RobotConfigModalProps> = ({ isOpen, onClose, on
             )}
           </div>
           <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3">
-            <button onClick={onClose} className="bg-white border hover:bg-gray-50 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm">Kapat</button>
+            <button onClick={() => onDownload(settings)} className="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2">
+                <span>📦</span> Robotu İndir (.ZIP)
+            </button>
+            <button onClick={onClose} className="bg-white border hover:bg-gray-50 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm">İptal</button>
           </div>
         </div>
       </div>
@@ -1253,30 +1339,22 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 px-8 h-16 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-3"><div className="bg-blue-600 text-white font-bold p-2 rounded-lg">M-AI</div><h1 className="text-xl font-bold text-slate-800">MuhasebeAI <span className="text-blue-600 text-sm">Turbo v2.5 Final</span></h1></div>
-        <div className="flex gap-2">
-          <button onClick={() => setIsTestMode(!isTestMode)} className={`px-3 py-2 rounded-lg text-xs font-bold ${isTestMode ? 'bg-amber-400 text-amber-900' : 'bg-slate-100 text-slate-500'}`}>{isTestMode ? 'TEST AKTİF' : 'Test Modu'}</button>
+        <div className="flex items-center gap-3"><div className="bg-blue-600 text-white font-bold p-2 rounded-lg">M-AI</div><h1 className="text-xl font-bold text-slate-800">MuhasebeAI <span className="text-blue-600 text-sm">Turbo</span></h1></div>
+        <div className="flex gap-4">
+          <button onClick={() => setIsTestMode(!isTestMode)} className={`px-4 py-2 rounded-lg text-xs font-bold ${isTestMode ? 'bg-amber-400 text-amber-900' : 'bg-slate-100 text-slate-500'}`}>{isTestMode ? 'TEST AKTİF' : 'Test Modu'}</button>
           
-          <button onClick={() => { setEditingCompanyId(null); setIsCompanyModalOpen(true); }} className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 flex items-center gap-2"><span>🏢</span> Firmalar</button>
+          <button onClick={() => { setEditingCompanyId(null); setIsCompanyModalOpen(true); }} className="bg-white border border-slate-300 text-slate-700 px-5 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 flex items-center gap-2"><span>🏢</span> Firmalar</button>
           
-          <button onClick={() => setIsRobotModalOpen(true)} className="bg-green-600 text-white px-5 py-2 rounded-lg text-xs font-bold hover:bg-green-700 shadow-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 animate-pulse"><span>📥</span> ROBOTU İNDİR</button>
+          <button onClick={() => setIsRobotModalOpen(true)} className="bg-slate-800 text-white px-5 py-2 rounded-lg text-xs font-bold hover:bg-slate-900 shadow-md flex items-center gap-2 transition-all hover:scale-105 active:scale-95"><span>🤖</span> Robot Merkezi</button>
         </div>
       </header>
       <main className="max-w-6xl mx-auto py-10 px-4">
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-10">
           <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
             <button onClick={() => setActiveMode('zreport')} className={`px-10 py-3 rounded-lg text-sm font-bold transition-all ${activeMode === 'zreport' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Z-Raporu</button>
             <button onClick={() => setActiveMode('tax')} className={`px-10 py-3 rounded-lg text-sm font-bold transition-all ${activeMode === 'tax' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Vergi & SGK</button>
           </div>
         </div>
-
-        {/* EKLENEN YENİ BUTON ALANI: Gözden kaçmasını önlemek için */}
-        <div className="flex justify-center mb-6">
-            <button onClick={() => setIsRobotModalOpen(true)} className="flex items-center gap-2 text-blue-600 bg-blue-50 border border-blue-200 px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-100 transition-colors animate-bounce">
-                ✨ Otomatik WhatsApp & Mail Robotunu İndirmek İçin Tıklayın
-            </button>
-        </div>
-
         <div className="bg-white rounded-2xl p-10 shadow-xl border border-slate-200">
           <UploadSection onFilesSelected={handleFiles} disabled={isProcessing} />
           {isProcessing && <div className="mt-4 text-center text-blue-600 font-medium animate-pulse">Belgeler Analiz Ediliyor...</div>}
